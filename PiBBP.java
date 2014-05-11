@@ -6,8 +6,11 @@
  * Java implementation adapted from #C implementation
  * that can be found at: 
  * http://latkin.org/blog/2012/11/03/the-bailey-borwein-plouffe-algorithm-in-c-and-f/
+ *
+ * Operation and stylistic changes
  */
-import java.math.BigInteger;
+import java.util.HashMap;
+
 public class PiBBP {
 	private static final double EPSILON = 1e-17;
 	private static final long[] TWO_POWERS = new long[30];
@@ -47,46 +50,40 @@ public class PiBBP {
 			sum = sum + term / denom;
 			sum = sum - (int)(sum);
 		}
-		
-		for(int i = n; i <= n + 100; i++) {
-			denom = 8 * i + m;
-			term = Math.pow(16, n - i) / denom;
-			if(term < EPSILON) {
-				break;
-			}
+		int i = n;
+		denom = 8 * i + m;
+		term = Math.pow(16, n - i) / denom;
+		while(i <= n + 100 && term >= EPSILON) {
 			sum = sum + term;
 			sum = sum - Math.floor(sum);
+			i++;
+			denom = 8 * i + m;
+			term = Math.pow(16, n - i) / denom;
 		}
 		return sum;
 	}
 
 	private static double modPow16(long p, long m) {
-		int i;
-		double pow1 = 0;
-		double pow2 = 0;
-		double result = 0;
-		
 		if(m == 1) {
 			return 0;
 		}
-		
-		for(i = 0; i < TWO_POWERS.length; i++) {
-			if(TWO_POWERS[i] > p) {
-				break;
-			}
+
+		int i = 0;
+		while(i < TWO_POWERS.length && TWO_POWERS[i] <= p) {
+			i++;
 		}
 		
-		pow2 = TWO_POWERS[i - 1];
-		pow1 = p;
-		result = 1;
+		long pow2 = TWO_POWERS[i];
+		long pow1 = p;
+		double result = 1;
 		
-		for(int j = 1; j <= i; j++) {
+		for(int j = 0; j <= i; j++) {
 			if(pow1 >= pow2) {
 				result = 16 * result;
 				result = result - (int)(result / m) * m;
 				pow1 = pow1 - pow2;
 			}
-			pow2 = 0.5 * pow2;
+			pow2 = pow2 >> 1;
 			if(pow2 >= 1) {
 				result = result * result;
 				result = result - (int)(result / m) * m;
