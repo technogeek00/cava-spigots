@@ -7,7 +7,12 @@
  * that can be found at: 
  * http://latkin.org/blog/2012/11/03/the-bailey-borwein-plouffe-algorithm-in-c-and-f/
  *
- * Operation and stylistic changes
+ * Main formula represented:
+ * Sum from k = 0 to infinity of 1/(16^k) * 
+ * [(4/(8k + 1)) - (2/(2k + 4)) - (1/(8k + 5)) - (1/(8k + 6))]
+ *       a              b              c               d
+ *
+ * The letters beneath parts of the sum will represent them in comments
  */
 import java.util.HashMap;
 
@@ -26,10 +31,10 @@ public class PiBBP {
 			TWO_POWERS[i] = TWO_POWERS[i - 1] << 1;
 		}
 		
-		double s1 = series(1, digitPosition);
-		double s2 = series(4, digitPosition);
-		double s3 = series(5, digitPosition);
-		double s4 = series(6, digitPosition);
+		double s1 = series(1, digitPosition); // compute part of a
+		double s2 = series(4, digitPosition); // compute part of b
+		double s3 = series(5, digitPosition); // compute part of c
+		double s4 = series(6, digitPosition); // compute part of d
 		
 		double piPoint = 4 * s1 - 2 * s2 - s3 - s4;
 		piPoint = piPoint - Math.floor(piPoint) + 1;
@@ -38,6 +43,11 @@ public class PiBBP {
 		System.out.println(hex.substring(4,hex.length() - 2));
 	}
 	
+	/**
+	 * Computes a portion of the formula, specifically:
+	 *  (1/(16^k)) * (1 / (8k + m))
+	 * Where m is the value passed in.
+	 */
 	private static double series(int m, int n) {
 		double sum = 0;
 		long denom = 0;
@@ -48,45 +58,53 @@ public class PiBBP {
 			pow = n - i;
 			term = modPow16(pow, denom);
 			sum = sum + term / denom;
+			// cast to truncate
+			// observe that sum is always positive here
 			sum = sum - (int)(sum);
 		}
-		int i = n;
-		denom = 8 * i + m;
-		term = Math.pow(16, n - i) / denom;
-		while(i <= n + 100 && term >= EPSILON) {
+
+		double divExp = 1;
+		denom = 8 * n + m;
+		term = divExp / denom;
+		int i = 0;
+		while(i < 100 && term >= EPSILON) {
 			sum = sum + term;
 			sum = sum - Math.floor(sum);
 			i++;
-			denom = 8 * i + m;
-			term = Math.pow(16, n - i) / denom;
+			denom += 8;
+			divExp /= 16;
+			term = divExp / denom;
 		}
 		return sum;
 	}
 
-	private static double modPow16(long p, long m) {
-		if(m == 1) {
+	/**
+	 * Computes 16^exp % mod
+	 */
+	private static double modPow16(long exp, long mod) {
+		if(mod == 1) {
 			return 0;
 		}
 
 		int i = 0;
-		while(i < TWO_POWERS.length && TWO_POWERS[i] <= p) {
+		while(i < TWO_POWERS.length && TWO_POWERS[i] <= exp) {
 			i++;
 		}
 		
 		long pow2 = TWO_POWERS[i];
-		long pow1 = p;
+		long pow1 = exp;
 		double result = 1;
 		
 		for(int j = 0; j <= i; j++) {
 			if(pow1 >= pow2) {
 				result = 16 * result;
-				result = result - (int)(result / m) * m;
+				result = result - (int)(result / mod) * mod;
 				pow1 = pow1 - pow2;
 			}
 			pow2 = pow2 >> 1;
 			if(pow2 >= 1) {
 				result = result * result;
-				result = result - (int)(result / m) * m;
+				result = result - (int)(result / mod) * mod;
 			}
 		}
 		return result;
