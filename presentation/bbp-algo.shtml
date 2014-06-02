@@ -153,7 +153,7 @@
 					As expected, on a machine with enough cores, the time for n direct is divided by about the number of small sums
 				</p>
 				<p style="text-align: center;">
-					<img src="n-v-seq-par.png" alt="direct, sequential, parallel" />
+					<img src="n-v-seq-par-billion.png" alt="direct, sequential, parallel" />
 				</p>
 			</div>
 			<div class="slide">
