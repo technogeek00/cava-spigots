@@ -2,6 +2,20 @@ import java.util.*;
 import java.util.concurrent.*;
 import static java.util.Arrays.asList;
 
+/**
+ * Java Bailey-Borwein-Plouffe formula implementation.
+ * Adapted from a number of papers, the main one being:
+ *    http://www.davidhbailey.com/dhbpapers/bbp-alg.pdf
+ *
+ * Main Features:
+ *   - Full Implementation of Pi Spigot
+ *   - Semi-Generalization to support other constants of BBP form
+ *   - Parallelized computation
+ *
+ * 
+ * @author Zachary Cava
+ * @version Monday June 2nd, 2014
+ */
 public class BBP {
 	/**
 	 * The maximum difference needed in series iterations before
@@ -36,7 +50,7 @@ public class BBP {
 	 * @param  position the position of the hexidecimal to compute
 	 * @return the computed digit
 	 */
-	public static double pi(int position) {
+	public static double pi(long position) {
 		int[][] config = {
 			{4, 1, 8},
 			{-2, 4, 8},
@@ -57,7 +71,7 @@ public class BBP {
 	 * @param  position the position of the hexidecimal to compute
 	 * @return          the computed digit
 	 */
-	public static double ln10(int position) {
+	public static double ln10(long position) {
 		int[][] config = {
 			{24, 1, 4},
 			{20, 2, 4},
@@ -89,7 +103,7 @@ public class BBP {
 	 * @param  base the numerical base to use
 	 * @return the summized value
 	 */
-	private static double bbp(int[][] configuration, int position, int base) {
+	private static double bbp(int[][] configuration, long position, int base) {
 		double runningSum = 0;
 
 		// check if parallelism is enabled
@@ -142,7 +156,7 @@ public class BBP {
 	 * @param  pos the digit position to compute
 	 * @return the result of the series
 	 */
-	public static double bbpSeries(int additive, int mult, int base, int pos) {
+	public static double bbpSeries(int additive, int mult, int base, long pos) {
 		double sum = 0;
 		long denom = 0;
 		long pow = 0;
@@ -228,14 +242,17 @@ public class BBP {
 		}
 	}
 
+	/**
+	 * Small internal callable task to help with parallelization
+	 */
 	private static class BBPSeriesParallel implements Callable<Double> {
 		private final int additive;
 		private final int multiplier;
 		private final int base;
-		private final int position;
+		private final long position;
 		private final int scale;
 
-		public BBPSeriesParallel(int scale, int add, int mult, int base, int pos) {
+		public BBPSeriesParallel(int scale, int add, int mult, int base, long pos) {
 			this.scale = scale;
 			additive = add;
 			multiplier = mult;
@@ -247,5 +264,24 @@ public class BBP {
 		public Double call() {
 			return scale * bbpSeries(additive, multiplier, base, position);
 		}
+	}
+
+	/**
+	 * Runs the BBP algorithm with the first argument as the decimal position to compute
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		if(args.length < 1 || Long.parseLong(args[0]) < 0) {
+			System.err.println("No position given to calculate, any integer greater than 0 is allowed");
+			System.exit(1);
+		}
+
+		long digitPosition = Long.parseLong(args[0]);
+
+		double point = BBP.pi(digitPosition);
+
+		String hex = Double.toHexString(point).toUpperCase();
+		// String the unnecessary values from the double string
+		System.out.println(hex.substring(4, hex.length() - 2));
 	}
 }
