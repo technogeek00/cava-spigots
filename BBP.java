@@ -17,7 +17,7 @@ public class BBP {
 	/**
 	 * The number of powers to cache for fast exponentiation
 	 */
-	private static final int POWER_CACHE = 30;
+	private static final int POWER_CACHE = 63;
 
 	/**
 	 * Whether or not to run computations in parallel when possible
@@ -48,6 +48,27 @@ public class BBP {
 		piPoint = piPoint - Math.floor(piPoint) + 1;
 
 		return piPoint;
+	}
+
+	/**
+	 * Calculates the hexidecimal at the given position in the
+	 * numerical constant ln(10)
+	 * 
+	 * @param  position the position of the hexidecimal to compute
+	 * @return          the computed digit
+	 */
+	public static double ln10(int position) {
+		int[][] config = {
+			{24, 1, 4},
+			{20, 2, 4},
+			{6, 3, 4},
+			{1, 4, 4}
+		};
+
+		double lnPoint = bbp(config, position, 16) / 16;
+		lnPoint = lnPoint - Math.floor(lnPoint) + 1;
+
+		return lnPoint;
 	}
 
 	/**
